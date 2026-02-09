@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Menu, X, BookOpen, Music, Search, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -17,6 +18,7 @@ export function Header() {
   const location = useLocation();
   const { getTotalItems } = useCart();
   const totalItems = getTotalItems();
+  const { settings } = useSiteSettings();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -27,14 +29,18 @@ export function Header() {
             <div className="relative h-10 w-10 lg:h-12 lg:w-12">
               <div className="absolute inset-0 bg-gradient-golden rounded-xl rotate-3 group-hover:rotate-6 transition-transform" />
               <div className="absolute inset-0.5 bg-card rounded-xl flex items-center justify-center">
-                <span className="text-gradient-gold font-heading font-bold text-lg lg:text-xl">LD</span>
+                <span className="text-gradient-gold font-heading font-bold text-lg lg:text-xl">
+                  {settings.brand.logoText}
+                </span>
               </div>
             </div>
             <div className="hidden sm:block">
               <h1 className="font-heading font-bold text-lg lg:text-xl text-foreground">
-                Luce Divina
+                {settings.brand.siteName}
               </h1>
-              <p className="text-xs text-muted-foreground -mt-0.5">Libri e Musica Cristiana</p>
+              <p className="text-xs text-muted-foreground -mt-0.5">
+                {settings.brand.siteTagline}
+              </p>
             </div>
           </Link>
 
