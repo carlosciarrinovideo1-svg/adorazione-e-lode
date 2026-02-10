@@ -128,6 +128,10 @@ export function AdminDashboard() {
               <SocialSettingsPanel />
             </TabsContent>
 
+            <TabsContent value="products">
+              <ProductsPanel />
+            </TabsContent>
+
             <TabsContent value="security">
               <SecuritySettingsPanel />
             </TabsContent>
