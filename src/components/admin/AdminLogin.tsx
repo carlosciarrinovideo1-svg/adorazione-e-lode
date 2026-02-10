@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { Lock, Eye, EyeOff, Shield, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +24,14 @@ export function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-divine flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-divine flex items-center justify-center p-4 relative">
+      <Link
+        to="/"
+        className="absolute top-4 left-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-card/80 backdrop-blur px-3 py-2 rounded-lg"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Torna al sito
+      </Link>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

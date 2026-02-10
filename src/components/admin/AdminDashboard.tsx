@@ -9,8 +9,11 @@ import {
   Share2, 
   Home,
   Shield,
-  RotateCcw
+  RotateCcw,
+  ArrowLeft,
+  Package
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -21,6 +24,7 @@ import { ContactSettingsPanel } from "./panels/ContactSettingsPanel";
 import { SocialSettingsPanel } from "./panels/SocialSettingsPanel";
 import { HeroSettingsPanel } from "./panels/HeroSettingsPanel";
 import { SecuritySettingsPanel } from "./panels/SecuritySettingsPanel";
+import { ProductsPanel } from "./panels/ProductsPanel";
 
 export function AdminDashboard() {
   const { logout } = useAdminAuth();
@@ -55,6 +59,12 @@ export function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Sito
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" onClick={handleReset}>
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
@@ -75,7 +85,7 @@ export function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 gap-2 h-auto p-2 bg-card">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-2 h-auto p-2 bg-card">
               <TabsTrigger value="brand" className="flex items-center gap-2 py-3">
                 <Type className="h-4 w-4" />
                 <span className="hidden sm:inline">Brand</span>
@@ -91,6 +101,10 @@ export function AdminDashboard() {
               <TabsTrigger value="social" className="flex items-center gap-2 py-3">
                 <Share2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Social</span>
+              </TabsTrigger>
+              <TabsTrigger value="products" className="flex items-center gap-2 py-3">
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Prodotti</span>
               </TabsTrigger>
               <TabsTrigger value="security" className="flex items-center gap-2 py-3">
                 <Shield className="h-4 w-4" />
@@ -112,6 +126,10 @@ export function AdminDashboard() {
 
             <TabsContent value="social">
               <SocialSettingsPanel />
+            </TabsContent>
+
+            <TabsContent value="products">
+              <ProductsPanel />
             </TabsContent>
 
             <TabsContent value="security">

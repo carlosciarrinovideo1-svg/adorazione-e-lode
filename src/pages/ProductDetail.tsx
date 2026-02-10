@@ -14,7 +14,8 @@ import {
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { products, inspirationalQuotes } from "@/lib/mockData";
+import { inspirationalQuotes } from "@/lib/mockData";
+import { useProductStore } from "@/hooks/useProductStore";
 import { useCart } from "@/hooks/useCart";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
+  const { products } = useProductStore();
 
   const product = products.find((p) => p.id === id);
   const relatedProducts = products

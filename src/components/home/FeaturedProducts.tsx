@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
-import { products, inspirationalQuotes } from "@/lib/mockData";
+import { inspirationalQuotes } from "@/lib/mockData";
+import { useProductStore } from "@/hooks/useProductStore";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { Quote } from "lucide-react";
 
 export function FeaturedProducts() {
+  const { products } = useProductStore();
   const featuredProducts = products.slice(0, 4);
   const randomQuote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
 
