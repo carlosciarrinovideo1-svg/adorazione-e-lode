@@ -29,7 +29,7 @@ const emptyProduct = {
 export function ProductsPanel() {
   const { products, addProduct, removeProduct } = useProductStore();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...emptyProduct });
+  const [form, setForm] = useState<typeof emptyProduct>(({ ...emptyProduct }));
   const [categorieInput, setCategorieInput] = useState("");
   const [tagInput, setTagInput] = useState("");
 
