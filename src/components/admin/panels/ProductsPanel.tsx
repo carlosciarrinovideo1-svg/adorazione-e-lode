@@ -8,8 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useProductStore } from "@/hooks/useProductStore";
 import { toast } from "sonner";
 
-const emptyProduct = {
-  tipo: "libro" as const,
+interface ProductForm {
+  tipo: "libro" | "musica";
+  titolo: string;
+  autore_artista: string;
+  ISBN_ASIN: string;
+  prezzo: number;
+  lingua: string;
+  formato: string;
+  descrizione: string;
+  immagini: string[];
+  url_originale: string;
+  categorie: string[];
+  tag: string[];
+  inventario: number;
+  stato: "in stock" | "esaurito";
+  data_aggiornamento: string;
+}
+
+const emptyProduct: ProductForm = {
+  tipo: "libro",
   titolo: "",
   autore_artista: "",
   ISBN_ASIN: "",
