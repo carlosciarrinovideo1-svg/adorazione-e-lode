@@ -18,6 +18,7 @@ import {
 const Catalogo = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
+  const { products } = useProductStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const tipo = searchParams.get("tipo") || "tutti";

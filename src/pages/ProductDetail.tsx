@@ -23,6 +23,7 @@ import { toast } from "sonner";
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
+  const { products } = useProductStore();
 
   const product = products.find((p) => p.id === id);
   const relatedProducts = products
