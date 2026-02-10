@@ -24,6 +24,7 @@ import { ContactSettingsPanel } from "./panels/ContactSettingsPanel";
 import { SocialSettingsPanel } from "./panels/SocialSettingsPanel";
 import { HeroSettingsPanel } from "./panels/HeroSettingsPanel";
 import { SecuritySettingsPanel } from "./panels/SecuritySettingsPanel";
+import { ProductsPanel } from "./panels/ProductsPanel";
 
 export function AdminDashboard() {
   const { logout } = useAdminAuth();
