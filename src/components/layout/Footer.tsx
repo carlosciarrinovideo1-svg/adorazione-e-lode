@@ -144,9 +144,14 @@ export function Footer() {
             <p className="text-background/50 text-sm text-center md:text-left">
               © {new Date().getFullYear()} {settings.brand.siteName}. Tutti i diritti riservati.
             </p>
-            <p className="text-background/50 text-sm italic">
-              "{settings.brand.footerQuote}" - {settings.brand.footerQuoteSource}
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-background/50 text-sm italic">
+                "{settings.brand.footerQuote}" - {settings.brand.footerQuoteSource}
+              </p>
+              <Link to="/admin" className="text-background/30 hover:text-gold transition-colors text-xs">
+                Admin
+              </Link>
+            </div>
           </div>
         </div>
       </div>
