@@ -9,8 +9,11 @@ import {
   Share2, 
   Home,
   Shield,
-  RotateCcw
+  RotateCcw,
+  ArrowLeft,
+  Package
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
