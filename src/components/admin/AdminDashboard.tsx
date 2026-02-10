@@ -102,6 +102,10 @@ export function AdminDashboard() {
                 <Share2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Social</span>
               </TabsTrigger>
+              <TabsTrigger value="products" className="flex items-center gap-2 py-3">
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Prodotti</span>
+              </TabsTrigger>
               <TabsTrigger value="security" className="flex items-center gap-2 py-3">
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Sicurezza</span>
