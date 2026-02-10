@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Search, Filter, Grid3X3, List, BookOpen, Music } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { ProductGrid } from "@/components/products/ProductGrid";
-import { products } from "@/lib/mockData";
+import { useProductStore } from "@/hooks/useProductStore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
