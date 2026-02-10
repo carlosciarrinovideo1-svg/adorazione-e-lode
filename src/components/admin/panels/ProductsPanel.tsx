@@ -40,7 +40,7 @@ const emptyProduct: ProductForm = {
   categorie: [] as string[],
   tag: [] as string[],
   inventario: 1,
-  stato: "in stock" as const,
+  stato: "in stock",
   data_aggiornamento: new Date().toISOString().split("T")[0],
 };
 
