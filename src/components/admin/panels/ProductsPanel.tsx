@@ -110,7 +110,7 @@ export function ProductsPanel() {
 
               <div className="space-y-2">
                 <Label>Tipo</Label>
-                <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v as "libro" | "musica" })}>
+                <Select value={form.tipo} onValueChange={(v: string) => setForm({ ...form, tipo: v as "libro" | "musica" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="libro">Libro</SelectItem>
