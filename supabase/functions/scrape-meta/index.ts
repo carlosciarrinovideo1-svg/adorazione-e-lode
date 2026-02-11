@@ -59,9 +59,26 @@ Deno.serve(async (req) => {
 
     const html = await response.text();
 
+    // Parse JSON-LD blocks
+    const jsonLdBlocks: any[] = [];
+    const jsonLdRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    let jsonLdMatch;
+    while ((jsonLdMatch = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(jsonLdMatch[1]);
+        if (Array.isArray(parsed)) jsonLdBlocks.push(...parsed);
+        else jsonLdBlocks.push(parsed);
+      } catch { /* skip invalid JSON-LD */ }
+    }
+
+    // Find product/book JSON-LD
+    const productLd = jsonLdBlocks.find(b => 
+      b['@type'] === 'Product' || b['@type'] === 'Book' || 
+      b['@type'] === 'IndividualProduct' || b['@type'] === 'CreativeWork'
+    );
+
     // Extract meta tags
     const getMeta = (property: string): string => {
-      // Try og: first, then standard meta
       const patterns = [
         new RegExp(`<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']+)["']`, 'i'),
         new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${property}["']`, 'i'),
@@ -74,24 +91,55 @@ Deno.serve(async (req) => {
     };
 
     const getTitle = (): string => {
-      return getMeta('og:title') || getMeta('twitter:title') || (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || '').trim();
+      // 1. OG/Twitter meta
+      const meta = getMeta('og:title') || getMeta('twitter:title');
+      if (meta) return meta;
+      // 2. JSON-LD name
+      if (productLd?.name) return productLd.name;
+      // 3. <title> tag
+      return (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || '').trim();
     };
 
     const getImage = (): string => {
-      return getMeta('og:image') || getMeta('twitter:image') || '';
+      // 1. OG/Twitter meta
+      const meta = getMeta('og:image') || getMeta('twitter:image');
+      if (meta) return meta;
+      // 2. JSON-LD image
+      if (productLd?.image) {
+        const img = Array.isArray(productLd.image) ? productLd.image[0] : productLd.image;
+        if (typeof img === 'string') return img;
+        if (img?.url) return img.url;
+      }
+      // 3. First large <img> in page (skip icons/logos by filtering small ones)
+      const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+      if (imgMatch?.[1] && !imgMatch[1].includes('logo') && !imgMatch[1].includes('icon')) {
+        return imgMatch[1];
+      }
+      return '';
     };
 
     const getDescription = (): string => {
-      return getMeta('og:description') || getMeta('twitter:description') || getMeta('description') || '';
+      // 1. OG/Twitter/standard meta
+      const meta = getMeta('og:description') || getMeta('twitter:description') || getMeta('description');
+      if (meta) return meta;
+      // 2. JSON-LD description
+      if (productLd?.description) return productLd.description;
+      return '';
     };
 
-    // Try to extract price from various patterns
     const getPrice = (): number => {
+      // 1. JSON-LD offers
+      if (productLd?.offers) {
+        const offers = Array.isArray(productLd.offers) ? productLd.offers[0] : productLd.offers;
+        if (offers?.price) return parseFloat(String(offers.price).replace(',', '.'));
+      }
+      // 2. HTML patterns
       const pricePatterns = [
         /(?:€|EUR)\s*([\d]+[.,]\d{2})/i,
         /([\d]+[.,]\d{2})\s*(?:€|EUR)/i,
         /price["\s:]+["\s]*([\d]+[.,]\d{2})/i,
         /amount["\s:]+["\s]*([\d]+[.,]\d{2})/i,
+        /data-price=["']([\d]+[.,]\d{2})["']/i,
       ];
       for (const p of pricePatterns) {
         const m = html.match(p);
@@ -100,14 +148,28 @@ Deno.serve(async (req) => {
       return 0;
     };
 
-    // Try to extract author
     const getAuthor = (): string => {
-      return getMeta('author') || getMeta('og:book:author') || getMeta('book:author') || '';
+      // 1. Meta tags
+      const meta = getMeta('author') || getMeta('og:book:author') || getMeta('book:author');
+      if (meta) return meta;
+      // 2. JSON-LD author
+      if (productLd?.author) {
+        const author = Array.isArray(productLd.author) ? productLd.author[0] : productLd.author;
+        if (typeof author === 'string') return author;
+        if (author?.name) return author.name;
+      }
+      return '';
     };
 
-    // Try to extract ISBN
     const getISBN = (): string => {
-      return getMeta('og:isbn') || getMeta('book:isbn') || (html.match(/(?:ISBN|ASIN)[:\s]*([0-9X-]{10,17})/i)?.[1] || '');
+      // 1. Meta tags
+      const meta = getMeta('og:isbn') || getMeta('book:isbn');
+      if (meta) return meta;
+      // 2. JSON-LD isbn
+      if (productLd?.isbn) return productLd.isbn;
+      if (productLd?.gtin13) return productLd.gtin13;
+      // 3. HTML pattern
+      return html.match(/(?:ISBN|ASIN)[:\s]*([0-9X-]{10,17})/i)?.[1] || '';
     };
 
     const result = {
