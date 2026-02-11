@@ -42,8 +42,17 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: `Failed to fetch: ${response.status}` }), {
-        status: 502,
+      console.error(`Fetch failed with status ${response.status} for URL: ${formattedUrl}`);
+      return new Response(JSON.stringify({ 
+        error: `Il sito ha rifiutato la richiesta (errore ${response.status}). Siti come Amazon bloccano il recupero automatico. Prova con IBS, Feltrinelli o altri siti.`,
+        titolo: '',
+        descrizione: '',
+        immagine: '',
+        prezzo: 0,
+        autore: '',
+        isbn: '',
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
