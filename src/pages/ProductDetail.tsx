@@ -52,9 +52,19 @@ const ProductDetail = () => {
     toast.success(`"${product.titolo}" aggiunto al carrello!`);
   };
 
+  const getExternalLinkText = (url: string) => {
+    if (!url) return "Vedi Fonte";
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes("amazon")) return "Vedi su Amazon";
+    if (lowerUrl.includes("youtube") || lowerUrl.includes("youtu.be")) return "Vedi su YouTube";
+    if (lowerUrl.includes("spotify")) return "Ascolta su Spotify";
+    if (lowerUrl.includes("ibs.it")) return "Vedi su IBS";
+    if (lowerUrl.includes("feltrinelli")) return "Vedi su La Feltrinelli";
+    return "Vedi Fonte Originale";
+  };
+
   return (
     <Layout>
-      {/* Breadcrumb */}
       <div className="bg-muted/50 border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
           <Link
@@ -67,10 +77,8 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Product */}
       <div className="container mx-auto px-4 py-8 lg:py-12">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -97,13 +105,11 @@ const ProductDetail = () => {
             </Badge>
           </motion.div>
 
-          {/* Details */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col"
           >
-            {/* Rating */}
             {product.valutazione && (
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex">
@@ -125,7 +131,6 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Title & Author */}
             <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground mb-2">
               {product.titolo}
             </h1>
@@ -136,7 +141,6 @@ const ProductDetail = () => {
               </span>
             </p>
 
-            {/* Price */}
             <div className="flex items-baseline gap-3 mb-6">
               <span className="font-heading text-4xl font-bold text-primary">
                 €{product.prezzo.toFixed(2)}
@@ -149,7 +153,6 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Meta */}
             <div className="flex flex-wrap gap-2 mb-6">
               <Badge variant="outline">{product.formato}</Badge>
               <Badge variant="outline">{product.lingua}</Badge>
@@ -160,12 +163,10 @@ const ProductDetail = () => {
               ))}
             </div>
 
-            {/* Description */}
             <p className="text-muted-foreground leading-relaxed mb-8">
               {product.descrizione}
             </p>
 
-            {/* Actions */}
             <div className="flex flex-wrap gap-4 mb-8">
               <Button
                 variant="hero"
@@ -184,7 +185,6 @@ const ProductDetail = () => {
               </Button>
             </div>
 
-            {/* External Link */}
             <a
               href={product.url_originale}
               target="_blank"
@@ -192,10 +192,9 @@ const ProductDetail = () => {
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               <ExternalLink className="h-4 w-4" />
-              Vedi su Amazon
+              {getExternalLinkText(product.url_originale)}
             </a>
 
-            {/* Quote */}
             <div className="mt-auto pt-8 border-t border-border mt-8">
               <blockquote className="italic text-muted-foreground">
                 "{randomQuote.text}"
@@ -207,7 +206,6 @@ const ProductDetail = () => {
           </motion.div>
         </div>
 
-        {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-16 lg:mt-24">
             <ProductGrid

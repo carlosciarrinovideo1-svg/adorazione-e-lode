@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Music, BookOpen, Youtube, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export interface ProductFormData {
   tipo: "libro" | "musica";
@@ -53,20 +54,34 @@ export function ProductEntryForm({
   isFetching,
   onFetchMeta,
 }: ProductEntryFormProps) {
-  return (
-    <div className="border border-border rounded-lg p-5 mb-6 space-y-4 bg-muted/50">
-      <h3 className="font-heading font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-        {isEditing ? "Modifica Prodotto" : "Nuovo Prodotto da Link Esterno"}
-      </h3>
+  const isMusic = form.tipo === "musica";
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2 md:col-span-2">
-          <Label>Link Esterno (es. Amazon) *</Label>
+  return (
+    <div className="border border-border rounded-lg p-5 mb-6 space-y-6 bg-muted/50">
+      <div className="flex items-center justify-between">
+        <h3 className="font-heading font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          {isEditing ? "Modifica Prodotto" : "Nuovo Prodotto"}
+          <span className={cn(
+            "px-2 py-0.5 rounded text-[10px] font-bold",
+            isMusic ? "bg-sky/20 text-sky-700" : "bg-olive/20 text-olive-700"
+          )}>
+            {isMusic ? "MUSICA / SOCIAL" : "LIBRO / CARTACEO"}
+          </span>
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Link Section */}
+        <div className="space-y-2 md:col-span-2 bg-card p-4 rounded-lg border border-border/50">
+          <Label className="flex items-center gap-2">
+            {isMusic ? <Youtube className="h-4 w-4 text-red-600" /> : <Globe className="h-4 w-4 text-primary" />}
+            Link Sorgente (Amazon, YouTube, Spotify, ecc.) *
+          </Label>
           <div className="flex gap-2">
             <Input
               value={form.url_originale}
               onChange={(e) => setForm({ ...form, url_originale: e.target.value })}
-              placeholder="https://amazon.it/dp/..."
+              placeholder={isMusic ? "Incolla link YouTube o Spotify..." : "Incolla link Amazon o IBS..."}
               className="flex-1"
             />
             <Button
@@ -81,9 +96,28 @@ export function ProductEntryForm({
               </span>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Inserisci il link e clicca "Recupera dati" per compilare automaticamente i campi
+          <p className="text-[11px] text-muted-foreground">
+            {isMusic 
+              ? "Per YouTube recuperiamo automaticamente la copertina in alta risoluzione e il nome del canale."
+              : "Per i libri recuperiamo titolo, autore, descrizione e immagine di copertina."}
           </p>
+        </div>
+
+        {/* Basic Info */}
+        <div className="space-y-2">
+          <Label>Tipo Prodotto</Label>
+          <Select value={form.tipo} onValueChange={(v: string) => setForm({ ...form, tipo: v as "libro" | "musica" })}>
+            <SelectTrigger>
+              <div className="flex items-center gap-2">
+                {isMusic ? <Music className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                <SelectValue />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="libro">Libro / Testo</SelectItem>
+              <SelectItem value="musica">Musica / Video / Social</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -96,23 +130,12 @@ export function ProductEntryForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Autore / Artista</Label>
+          <Label>{isMusic ? "Artista / Canale" : "Autore"}</Label>
           <Input
             value={form.autore_artista}
             onChange={(e) => setForm({ ...form, autore_artista: e.target.value })}
-            placeholder="Nome autore o artista"
+            placeholder={isMusic ? "Nome artista o canale YouTube" : "Nome autore"}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Tipo</Label>
-          <Select value={form.tipo} onValueChange={(v: string) => setForm({ ...form, tipo: v as "libro" | "musica" })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="libro">Libro</SelectItem>
-              <SelectItem value="musica">Musica</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">
@@ -122,12 +145,21 @@ export function ProductEntryForm({
             step="0.01"
             value={form.prezzo || ""}
             onChange={(e) => setForm({ ...form, prezzo: parseFloat(e.target.value) || 0 })}
-            placeholder="0.00"
+            placeholder="0.00 (lascia 0 se gratuito)"
           />
         </div>
 
         <div className="space-y-2">
-          <Label>ISBN / ASIN</Label>
+          <Label>{isMusic ? "Piattaforma / Formato" : "Formato"}</Label>
+          <Input
+            value={form.formato}
+            onChange={(e) => setForm({ ...form, formato: e.target.value })}
+            placeholder={isMusic ? "YouTube, Spotify, CD, MP3..." : "Cartaceo, eBook..."}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>{isMusic ? "ID Video / Codice" : "ISBN / ASIN"}</Label>
           <Input
             value={form.ISBN_ASIN}
             onChange={(e) => setForm({ ...form, ISBN_ASIN: e.target.value })}
@@ -135,34 +167,31 @@ export function ProductEntryForm({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Formato</Label>
-          <Input
-            value={form.formato}
-            onChange={(e) => setForm({ ...form, formato: e.target.value })}
-            placeholder="Cartaceo, eBook, CD, MP3..."
-          />
-        </div>
-
+        {/* Media & Description */}
         <div className="space-y-2 md:col-span-2">
-          <Label>URL Immagine</Label>
+          <Label>URL Immagine Copertina (Alta Risoluzione)</Label>
           <Input
             value={form.immagini[0]}
             onChange={(e) => setForm({ ...form, immagini: [e.target.value] })}
-            placeholder="https://... (URL immagine del prodotto)"
+            placeholder="https://... (URL immagine)"
           />
           {form.immagini[0] && (
-            <img src={form.immagini[0]} alt="Anteprima" className="w-20 h-20 rounded object-cover mt-2 border" />
+            <div className="mt-2 relative w-40 aspect-[3/4] rounded-lg overflow-hidden border shadow-sm">
+              <img src={form.immagini[0]} alt="Anteprima" className="w-full h-full object-cover" />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[10px] text-white p-1 text-center">
+                Anteprima Copertina
+              </div>
+            </div>
           )}
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label>Descrizione</Label>
+          <Label>Descrizione / Note</Label>
           <Textarea
             value={form.descrizione}
             onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
-            placeholder="Descrizione del prodotto"
-            rows={3}
+            placeholder="Descrizione del prodotto o del video..."
+            rows={4}
           />
         </div>
 
@@ -171,7 +200,7 @@ export function ProductEntryForm({
           <Input
             value={categorieInput}
             onChange={(e) => setCategorieInput(e.target.value)}
-            placeholder="Spiritualità, Fede, ..."
+            placeholder="Worship, Testimonianza, ..."
           />
         </div>
 
@@ -180,16 +209,18 @@ export function ProductEntryForm({
           <Input
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
-            placeholder="ispirazione, preghiera, ..."
+            placeholder="ispirazione, lode, ..."
           />
         </div>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button onClick={onSubmit}>
+      <div className="flex gap-3 pt-4 border-t border-border/50">
+        <Button onClick={onSubmit} className="flex-1 md:flex-none">
           {isEditing ? "Salva Modifiche" : "Aggiungi al Catalogo"}
         </Button>
-        <Button variant="outline" onClick={onCancel}>Annulla</Button>
+        <Button variant="outline" onClick={onCancel} className="flex-1 md:flex-none">
+          Annulla
+        </Button>
       </div>
     </div>
   );
