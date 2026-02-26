@@ -25,12 +25,23 @@ serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
+    // Se è YouTube, aggiungiamo hl=it per forzare l'italiano o hl=en per l'originale se preferito.
+    // Ma per evitare traduzioni automatiche basate sulla posizione del server, 
+    // usiamo header di lingua neutri o multipli.
+    if (formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be')) {
+      const separator = formattedUrl.includes('?') ? '&' : '?';
+      // hl=it forza la visualizzazione in italiano se disponibile, evitando traduzioni verso la lingua del server (es. inglese)
+      formattedUrl += `${separator}hl=it&persist_hl=1`;
+    }
+
     console.log("[scrape-meta] Fetching:", formattedUrl);
 
     const response = await fetch(formattedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
       },
       redirect: 'follow',
     });
@@ -64,28 +75,23 @@ serve(async (req) => {
 
     // Gestione YouTube avanzata per Autore/Canale
     if (formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be')) {
-      // 1. Prova con il meta tag author (spesso presente)
       if (!autore) autore = getMeta('author');
       
-      // 2. Prova a cercare il nome del canale nel JSON-LD o nei tag link
       if (!autore) {
         const channelNameMatch = html.match(/<link itemprop="name" content="([^"]+)">/i);
         if (channelNameMatch?.[1]) autore = channelNameMatch[1];
       }
       
-      // 3. Prova a cercare nel blocco script di YouTube (ownerChannelName)
       if (!autore) {
         const ownerMatch = html.match(/"ownerChannelName":"([^"]+)"/i);
         if (ownerMatch?.[1]) autore = ownerMatch[1];
       }
 
-      // 4. Prova a cercare nel blocco script di YouTube (author)
       if (!autore) {
         const authorMatch = html.match(/"author":"([^"]+)"/i);
         if (authorMatch?.[1]) autore = authorMatch[1];
       }
 
-      // 5. Fallback: se il titolo contiene " - YouTube", prova a estrarre il canale
       if (!autore && titolo.includes(' - YouTube')) {
         const parts = titolo.split(' - ');
         if (parts.length >= 2) autore = parts[parts.length - 2];
