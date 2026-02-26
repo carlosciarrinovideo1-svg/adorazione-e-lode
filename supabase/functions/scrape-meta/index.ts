@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
 const corsHeaders = {
-  'Access-Control-Origin': '*',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
@@ -25,6 +25,8 @@ serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
+    console.log("[scrape-meta] Fetching:", formattedUrl);
+
     const response = await fetch(formattedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -33,9 +35,11 @@ serve(async (req) => {
       redirect: 'follow',
     });
 
+    // Se il fetch fallisce, restituiamo comunque un oggetto vuoto invece di un errore 500
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: `Errore ${response.status}` }), {
-        status: 200,
+      return new Response(JSON.stringify({ 
+        titolo: '', descrizione: '', immagine: '', prezzo: null, autore: '', isbn: '' 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -61,32 +65,39 @@ serve(async (req) => {
 
     // Pulizia immagine Amazon per alta risoluzione
     if (formattedUrl.includes('amazon') && immagine) {
-      // Rimuove i parametri di ridimensionamento come ._AC_SY200_
       immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
     }
 
-    // Gestione YouTube
+    // Gestione YouTube avanzata
     if (formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be')) {
-      if (immagine && immagine.includes('hqdefault.jpg')) {
+      // Se non abbiamo l'immagine og:image, proviamo a ricostruirla dall'ID video
+      if (!immagine) {
+        const videoIdMatch = formattedUrl.match(/(?:v=|\/embed\/|\/watch\?v=|\/v\/|youtu\.be\/|\/shorts\/|watch\?.*v=)([^#\&\?]*).*/);
+        if (videoIdMatch && videoIdMatch[1]) {
+          immagine = `https://img.youtube.com/vi/${videoIdMatch[1]}/maxresdefault.jpg`;
+        }
+      } else if (immagine.includes('hqdefault.jpg')) {
         immagine = immagine.replace('hqdefault.jpg', 'maxresdefault.jpg');
       }
+      
       const channelMatch = html.match(/"author":"([^"]+)"/i);
       if (channelMatch?.[1]) autore = channelMatch[1];
     }
 
     return new Response(JSON.stringify({
-      titolo,
-      descrizione,
-      immagine,
+      titolo: titolo || '',
+      descrizione: descrizione || '',
+      immagine: immagine || '',
       prezzo: null,
-      autore,
+      autore: autore || '',
       isbn: getMeta('og:isbn') || (html.match(/(?:ISBN|ASIN)[:\s]*([0-9X-]{10,17})/i)?.[1] || ''),
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
+    console.error("[scrape-meta] Error:", e);
     return new Response(JSON.stringify({ error: 'Scrape error' }), {
-      status: 500,
+      status: 200, // Restituiamo 200 per non bloccare il client
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

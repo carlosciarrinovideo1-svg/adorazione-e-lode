@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, ExternalLink, Package, Pencil } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Package, Pencil, BookOpen, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProductStore } from "@/hooks/useProductStore";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ const emptyProduct: ProductFormData = {
   titolo: "",
   autore_artista: "",
   ISBN_ASIN: "",
-  prezzo: 0,
+  prezzo: null,
   lingua: "Italiano",
   formato: "Cartaceo",
   descrizione: "",
@@ -31,17 +31,26 @@ export function ProductsPanel() {
   const { products, addProduct, removeProduct, updateProduct } = useProductStore();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProductFormData>({ ...emptyProduct });
+  const [form, setForm] = useState<ProductFormData>(emptyProduct);
   const [categorieInput, setCategorieInput] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [isFetching, setIsFetching] = useState(false);
 
   const resetForm = () => {
-    setForm({ ...emptyProduct });
+    setForm(emptyProduct);
     setCategorieInput("");
     setTagInput("");
     setShowForm(false);
     setEditingId(null);
+  };
+
+  const startNewProduct = (tipo: "libro" | "musica") => {
+    setForm({ 
+      ...emptyProduct, 
+      tipo, 
+      formato: tipo === "musica" ? "YouTube" : "Cartaceo" 
+    });
+    setShowForm(true);
   };
 
   const handleFetchMeta = async () => {
@@ -51,22 +60,23 @@ export function ProductsPanel() {
       const { data, error } = await supabase.functions.invoke('scrape-meta', {
         body: { url: form.url_originale },
       });
+      
       if (error) throw error;
+      
       if (data) {
         setForm((prev) => ({
           ...prev,
           titolo: data.titolo || prev.titolo,
           descrizione: data.descrizione || prev.descrizione,
           immagini: data.immagine ? [data.immagine] : prev.immagini,
-          prezzo: data.prezzo || prev.prezzo,
           autore_artista: data.autore || prev.autore_artista,
           ISBN_ASIN: data.isbn || prev.ISBN_ASIN,
         }));
-        toast.success("Dati recuperati! Puoi modificarli prima di salvare.");
+        toast.success("Dati recuperati con successo!");
       }
     } catch (e) {
       console.error('Fetch meta error:', e);
-      toast.error("Impossibile recuperare i dati. Inseriscili manualmente.");
+      toast.error("Impossibile recuperare i dati automaticamente. Inseriscili manualmente.");
     } finally {
       setIsFetching(false);
     }
@@ -97,7 +107,7 @@ export function ProductsPanel() {
       titolo: p.titolo,
       autore_artista: p.autore_artista,
       ISBN_ASIN: p.ISBN_ASIN,
-      prezzo: p.prezzo,
+      prezzo: p.prezzo || null,
       lingua: p.lingua,
       formato: p.formato,
       descrizione: p.descrizione,
@@ -115,26 +125,25 @@ export function ProductsPanel() {
     setShowForm(true);
   };
 
-  const handleRemove = (id: string, titolo: string) => {
-    if (confirm(`Rimuovere "${titolo}" dal catalogo?`)) {
-      removeProduct(id);
-      toast.success("Prodotto rimosso");
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-xl border border-border p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <Package className="h-5 w-5 text-primary" />
-            <h2 className="font-heading font-bold text-lg">Gestione Prodotti</h2>
+            <h2 className="font-heading font-bold text-lg">Gestione Catalogo</h2>
           </div>
           {!showForm && (
-            <Button onClick={() => { resetForm(); setShowForm(true); }} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Aggiungi Prodotto
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => startNewProduct("libro")} size="sm" variant="outline" className="border-olive/50 text-olive hover:bg-olive/10">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Aggiungi Libro
+              </Button>
+              <Button onClick={() => startNewProduct("musica")} size="sm" variant="outline" className="border-sky/50 text-sky-700 hover:bg-sky/10">
+                <Music className="h-4 w-4 mr-2" />
+                Aggiungi Musica/Social
+              </Button>
+            </div>
           )}
         </div>
 
@@ -155,27 +164,40 @@ export function ProductsPanel() {
         )}
 
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">{products.length} prodotti nel catalogo</p>
+          <div className="flex items-center justify-between border-b pb-2">
+            <p className="text-sm font-medium text-muted-foreground">Prodotti in Catalogo ({products.length})</p>
+          </div>
           {products.map((p) => (
-            <div key={p.id} className="flex items-center gap-4 p-3 rounded-lg border border-border bg-background">
+            <div key={p.id} className="flex items-center gap-4 p-3 rounded-lg border border-border bg-background hover:shadow-sm transition-shadow">
               {p.immagini[0] && (
-                <img src={p.immagini[0]} alt={p.titolo} className="w-12 h-12 rounded object-cover" />
+                <img src={p.immagini[0]} alt={p.titolo} className="w-12 h-16 rounded object-cover border" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{p.titolo}</p>
-                <p className="text-xs text-muted-foreground">{p.autore_artista} · €{p.prezzo.toFixed(2)} · {p.tipo}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-sm truncate">{p.titolo}</p>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${p.tipo === 'libro' ? 'bg-olive/10 text-olive' : 'bg-sky/10 text-sky-700'}`}>
+                    {p.tipo}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">{p.autore_artista} · {p.prezzo ? `€${p.prezzo.toFixed(2)}` : 'Gratis'}</p>
               </div>
-              {p.url_originale && (
-                <a href={p.url_originale} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              )}
-              <Button variant="ghost" size="icon" onClick={() => handleEdit(p)}>
-                <Pencil className="h-4 w-4 text-primary" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleRemove(p.id, p.titolo)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {p.url_originale && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <a href={p.url_originale} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(p)}>
+                  <Pencil className="h-4 w-4 text-primary" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => {
+                  if (confirm(`Rimuovere "${p.titolo}"?`)) removeProduct(p.id);
+                }}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
