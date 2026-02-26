@@ -22,8 +22,6 @@ Deno.serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    console.log('Fetching URL:', formattedUrl);
-
     const response = await fetch(formattedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -49,7 +47,6 @@ Deno.serve(async (req) => {
 
     const html = await response.text();
 
-    // Helper to extract meta tags
     const getMeta = (property: string): string => {
       const patterns = [
         new RegExp(`<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']+)["']`, 'i'),
@@ -62,7 +59,6 @@ Deno.serve(async (req) => {
       return '';
     };
 
-    // YouTube Specific Logic
     const isYouTube = formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be');
     
     let titolo = getMeta('og:title') || getMeta('twitter:title') || (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || '').trim();
@@ -71,16 +67,13 @@ Deno.serve(async (req) => {
     let autore = getMeta('author') || '';
 
     if (isYouTube) {
-      // Try to get max resolution thumbnail for YouTube
       if (immagine && immagine.includes('hqdefault.jpg')) {
         immagine = immagine.replace('hqdefault.jpg', 'maxresdefault.jpg');
       }
-      // Extract channel name as author if possible
       const channelMatch = html.match(/"author":"([^"]+)"/i);
       if (channelMatch?.[1]) autore = channelMatch[1];
     }
 
-    // Clean up Amazon image URLs to get higher resolution
     if (formattedUrl.includes('amazon') && immagine) {
       immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
     }
@@ -89,7 +82,7 @@ Deno.serve(async (req) => {
       titolo,
       descrizione,
       immagine,
-      prezzo: 0, // Usually needs specific site logic
+      prezzo: 0,
       autore,
       isbn: getMeta('og:isbn') || (html.match(/(?:ISBN|ASIN)[:\s]*([0-9X-]{10,17})/i)?.[1] || ''),
     };
