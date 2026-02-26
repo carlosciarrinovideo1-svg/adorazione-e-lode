@@ -67,7 +67,6 @@ Deno.serve(async (req) => {
     let autore = getMeta('author') || '';
 
     if (isYouTube) {
-      // Forza l'immagine in alta risoluzione per YouTube
       if (immagine && immagine.includes('hqdefault.jpg')) {
         immagine = immagine.replace('hqdefault.jpg', 'maxresdefault.jpg');
       }
@@ -75,7 +74,6 @@ Deno.serve(async (req) => {
       if (channelMatch?.[1]) autore = channelMatch[1];
     }
 
-    // Pulisce gli URL Amazon per ottenere l'immagine originale (alta risoluzione)
     if (formattedUrl.includes('amazon') && immagine) {
       immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
     }
