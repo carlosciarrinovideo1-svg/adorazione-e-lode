@@ -1,12 +1,12 @@
 // Supabase Edge Function: Scrape Metadata
-// Questa funzione verrà distribuita automaticamente una volta selezionato il progetto Supabase.
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log("[scrape-meta] Fetching URL:", url);
 
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
@@ -34,6 +36,7 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
+      console.error("[scrape-meta] Fetch failed with status:", response.status);
       return new Response(JSON.stringify({ 
         error: `Errore ${response.status}`,
         titolo: '',
@@ -90,10 +93,13 @@ Deno.serve(async (req) => {
       isbn: getMeta('og:isbn') || (html.match(/(?:ISBN|ASIN)[:\s]*([0-9X-]{10,17})/i)?.[1] || ''),
     };
 
+    console.log("[scrape-meta] Successfully scraped metadata for:", titolo);
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
+    console.error("[scrape-meta] Unexpected error:", e);
     return new Response(JSON.stringify({ error: 'Scrape error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
