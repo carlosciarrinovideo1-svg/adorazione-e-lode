@@ -35,7 +35,6 @@ serve(async (req) => {
       redirect: 'follow',
     });
 
-    // Se il fetch fallisce, restituiamo comunque un oggetto vuoto invece di un errore 500
     if (!response.ok) {
       return new Response(JSON.stringify({ 
         titolo: '', descrizione: '', immagine: '', prezzo: null, autore: '', isbn: '' 
@@ -63,14 +62,30 @@ serve(async (req) => {
     let descrizione = getMeta('og:description') || getMeta('description');
     let autore = getMeta('author') || '';
 
-    // Pulizia immagine Amazon per alta risoluzione
-    if (formattedUrl.includes('amazon') && immagine) {
-      immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
-    }
-
-    // Gestione YouTube avanzata
+    // Gestione YouTube avanzata per Autore/Canale
     if (formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be')) {
-      // Se non abbiamo l'immagine og:image, proviamo a ricostruirla dall'ID video
+      // 1. Prova con il meta tag author (spesso presente)
+      if (!autore) autore = getMeta('author');
+      
+      // 2. Prova a cercare il nome del canale nel JSON-LD o nei tag link
+      if (!autore) {
+        const channelNameMatch = html.match(/<link itemprop="name" content="([^"]+)">/i);
+        if (channelNameMatch?.[1]) autore = channelNameMatch[1];
+      }
+      
+      // 3. Prova a cercare nel blocco script di YouTube (ownerChannelName)
+      if (!autore) {
+        const ownerMatch = html.match(/"ownerChannelName":"([^"]+)"/i);
+        if (ownerMatch?.[1]) autore = ownerMatch[1];
+      }
+
+      // 4. Prova a cercare nel blocco script di YouTube (author)
+      if (!autore) {
+        const authorMatch = html.match(/"author":"([^"]+)"/i);
+        if (authorMatch?.[1]) autore = authorMatch[1];
+      }
+
+      // Gestione Immagine YouTube
       if (!immagine) {
         const videoIdMatch = formattedUrl.match(/(?:v=|\/embed\/|\/watch\?v=|\/v\/|youtu\.be\/|\/shorts\/|watch\?.*v=)([^#\&\?]*).*/);
         if (videoIdMatch && videoIdMatch[1]) {
@@ -79,9 +94,11 @@ serve(async (req) => {
       } else if (immagine.includes('hqdefault.jpg')) {
         immagine = immagine.replace('hqdefault.jpg', 'maxresdefault.jpg');
       }
-      
-      const channelMatch = html.match(/"author":"([^"]+)"/i);
-      if (channelMatch?.[1]) autore = channelMatch[1];
+    }
+
+    // Pulizia immagine Amazon
+    if (formattedUrl.includes('amazon') && immagine) {
+      immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
     }
 
     return new Response(JSON.stringify({
@@ -97,7 +114,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("[scrape-meta] Error:", e);
     return new Response(JSON.stringify({ error: 'Scrape error' }), {
-      status: 200, // Restituiamo 200 per non bloccare il client
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
