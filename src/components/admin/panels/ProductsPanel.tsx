@@ -76,7 +76,7 @@ export function ProductsPanel() {
       }
     } catch (e) {
       console.error('Fetch meta error:', e);
-      toast.error("Impossibile recuperare i dati automaticamente. Inseriscili manualmente.");
+      toast.error("Impossibile recuperare i dati automaticamente.");
     } finally {
       setIsFetching(false);
     }
@@ -95,7 +95,9 @@ export function ProductsPanel() {
       updateProduct(editingId, { ...form, categorie, tag, immagini });
       toast.success("Prodotto aggiornato!");
     } else {
-      addProduct({ ...form, id: crypto.randomUUID(), categorie, tag, immagini });
+      // Generatore di ID compatibile
+      const newId = Math.random().toString(36).substring(2, 15);
+      addProduct({ ...form, id: newId, categorie, tag, immagini });
       toast.success("Prodotto aggiunto!");
     }
     resetForm();

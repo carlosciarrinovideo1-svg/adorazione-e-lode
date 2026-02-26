@@ -85,6 +85,12 @@ serve(async (req) => {
         if (authorMatch?.[1]) autore = authorMatch[1];
       }
 
+      // 5. Fallback: se il titolo contiene " - YouTube", prova a estrarre il canale
+      if (!autore && titolo.includes(' - YouTube')) {
+        const parts = titolo.split(' - ');
+        if (parts.length >= 2) autore = parts[parts.length - 2];
+      }
+
       // Gestione Immagine YouTube
       if (!immagine) {
         const videoIdMatch = formattedUrl.match(/(?:v=|\/embed\/|\/watch\?v=|\/v\/|youtu\.be\/|\/shorts\/|watch\?.*v=)([^#\&\?]*).*/);
