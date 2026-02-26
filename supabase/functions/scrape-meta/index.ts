@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
@@ -20,8 +20,6 @@ serve(async (req) => {
       });
     }
 
-    console.log("[scrape-meta] Fetching URL:", url);
-
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
@@ -36,16 +34,7 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      console.error("[scrape-meta] Fetch failed with status:", response.status);
-      return new Response(JSON.stringify({ 
-        error: `Errore ${response.status}`,
-        titolo: '',
-        descrizione: '',
-        immagine: '',
-        prezzo: 0,
-        autore: '',
-        isbn: '',
-      }), {
+      return new Response(JSON.stringify({ error: `Errore ${response.status}` }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -65,14 +54,19 @@ serve(async (req) => {
       return '';
     };
 
-    const isYouTube = formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be');
-    
     let titolo = getMeta('og:title') || getMeta('twitter:title') || (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || '').trim();
     let immagine = getMeta('og:image') || getMeta('twitter:image');
     let descrizione = getMeta('og:description') || getMeta('description');
     let autore = getMeta('author') || '';
 
-    if (isYouTube) {
+    // Pulizia immagine Amazon per alta risoluzione
+    if (formattedUrl.includes('amazon') && immagine) {
+      // Rimuove i parametri di ridimensionamento come ._AC_SY200_
+      immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
+    }
+
+    // Gestione YouTube
+    if (formattedUrl.includes('youtube.com') || formattedUrl.includes('youtu.be')) {
       if (immagine && immagine.includes('hqdefault.jpg')) {
         immagine = immagine.replace('hqdefault.jpg', 'maxresdefault.jpg');
       }
@@ -80,26 +74,17 @@ serve(async (req) => {
       if (channelMatch?.[1]) autore = channelMatch[1];
     }
 
-    if (formattedUrl.includes('amazon') && immagine) {
-      immagine = immagine.replace(/\._[A-Z0-9,]+_\./i, '.');
-    }
-
-    const result = {
+    return new Response(JSON.stringify({
       titolo,
       descrizione,
       immagine,
-      prezzo: 0,
+      prezzo: null,
       autore,
       isbn: getMeta('og:isbn') || (html.match(/(?:ISBN|ASIN)[:\s]*([0-9X-]{10,17})/i)?.[1] || ''),
-    };
-
-    console.log("[scrape-meta] Successfully scraped metadata for:", titolo);
-
-    return new Response(JSON.stringify(result), {
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error("[scrape-meta] Unexpected error:", e);
     return new Response(JSON.stringify({ error: 'Scrape error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2, Search, Music, BookOpen, Youtube, Globe } from "lucide-react";
+import { Loader2, Search, Music, BookOpen, Youtube, Globe, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ export interface ProductFormData {
   titolo: string;
   autore_artista: string;
   ISBN_ASIN: string;
-  prezzo: number;
+  prezzo: number | null;
   lingua: string;
   formato: string;
   descrizione: string;
@@ -71,7 +71,6 @@ export function ProductEntryForm({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Link Section */}
         <div className="space-y-2 md:col-span-2 bg-card p-4 rounded-lg border border-border/50">
           <Label className="flex items-center gap-2">
             {isMusic ? <Youtube className="h-4 w-4 text-red-600" /> : <Globe className="h-4 w-4 text-primary" />}
@@ -81,7 +80,7 @@ export function ProductEntryForm({
             <Input
               value={form.url_originale}
               onChange={(e) => setForm({ ...form, url_originale: e.target.value })}
-              placeholder={isMusic ? "Incolla link YouTube o Spotify..." : "Incolla link Amazon o IBS..."}
+              placeholder={isMusic ? "Incolla link YouTube, Spotify, TikTok..." : "Incolla link Amazon o IBS..."}
               className="flex-1"
             />
             <Button
@@ -96,14 +95,8 @@ export function ProductEntryForm({
               </span>
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {isMusic 
-              ? "Per YouTube recuperiamo automaticamente la copertina in alta risoluzione e il nome del canale."
-              : "Per i libri recuperiamo titolo, autore, descrizione e immagine di copertina."}
-          </p>
         </div>
 
-        {/* Basic Info */}
         <div className="space-y-2">
           <Label>Tipo Prodotto</Label>
           <Select value={form.tipo} onValueChange={(v: string) => setForm({ ...form, tipo: v as "libro" | "musica" })}>
@@ -134,7 +127,7 @@ export function ProductEntryForm({
           <Input
             value={form.autore_artista}
             onChange={(e) => setForm({ ...form, autore_artista: e.target.value })}
-            placeholder={isMusic ? "Nome artista o canale YouTube" : "Nome autore"}
+            placeholder={isMusic ? "Nome artista o canale" : "Nome autore"}
           />
         </div>
 
@@ -143,18 +136,18 @@ export function ProductEntryForm({
           <Input
             type="number"
             step="0.01"
-            value={form.prezzo || ""}
-            onChange={(e) => setForm({ ...form, prezzo: parseFloat(e.target.value) || 0 })}
-            placeholder="0.00 (lascia 0 se gratuito)"
+            value={form.prezzo === null ? "" : form.prezzo}
+            onChange={(e) => setForm({ ...form, prezzo: e.target.value === "" ? null : parseFloat(e.target.value) })}
+            placeholder="Lascia vuoto se gratuito"
           />
         </div>
 
         <div className="space-y-2">
-          <Label>{isMusic ? "Piattaforma / Formato" : "Formato"}</Label>
+          <Label>{isMusic ? "Piattaforma" : "Formato"}</Label>
           <Input
             value={form.formato}
             onChange={(e) => setForm({ ...form, formato: e.target.value })}
-            placeholder={isMusic ? "YouTube, Spotify, CD, MP3..." : "Cartaceo, eBook..."}
+            placeholder={isMusic ? "YouTube, Spotify, TikTok..." : "Cartaceo, eBook..."}
           />
         </div>
 
@@ -167,19 +160,26 @@ export function ProductEntryForm({
           />
         </div>
 
-        {/* Media & Description */}
         <div className="space-y-2 md:col-span-2">
-          <Label>URL Immagine Copertina (Alta Risoluzione)</Label>
+          <Label className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            URL Immagine Copertina
+          </Label>
           <Input
             value={form.immagini[0]}
             onChange={(e) => setForm({ ...form, immagini: [e.target.value] })}
-            placeholder="https://... (URL immagine)"
+            placeholder="https://... (URL immagine alta risoluzione)"
           />
           {form.immagini[0] && (
-            <div className="mt-2 relative w-40 aspect-[3/4] rounded-lg overflow-hidden border shadow-sm">
-              <img src={form.immagini[0]} alt="Anteprima" className="w-full h-full object-cover" />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[10px] text-white p-1 text-center">
-                Anteprima Copertina
+            <div className="mt-4">
+              <p className="text-xs font-medium mb-2 text-muted-foreground">Anteprima Copertina:</p>
+              <div className="relative w-48 aspect-[3/4] rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg bg-background">
+                <img 
+                  src={form.immagini[0]} 
+                  alt="Anteprima" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => (e.currentTarget.src = "https://via.placeholder.com/300x400?text=Immagine+non+valida")}
+                />
               </div>
             </div>
           )}
@@ -190,7 +190,7 @@ export function ProductEntryForm({
           <Textarea
             value={form.descrizione}
             onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
-            placeholder="Descrizione del prodotto o del video..."
+            placeholder="Descrizione del prodotto..."
             rows={4}
           />
         </div>
