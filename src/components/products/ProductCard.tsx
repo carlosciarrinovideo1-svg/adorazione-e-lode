@@ -96,7 +96,9 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xl font-heading font-bold text-primary">
-                  €{product.prezzo.toFixed(2)}
+                  {product.prezzo !== null && product.prezzo !== undefined 
+                    ? `€${product.prezzo.toFixed(2)}` 
+                    : "Gratis"}
                 </p>
               </div>
               <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">

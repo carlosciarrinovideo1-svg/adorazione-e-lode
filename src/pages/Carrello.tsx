@@ -125,7 +125,7 @@ const Carrello = () => {
                     {/* Price & Remove */}
                     <div className="flex items-center gap-4">
                       <span className="font-heading font-bold text-lg text-primary">
-                        €{(item.product.prezzo * item.quantity).toFixed(2)}
+                        €{((item.product.prezzo || 0) * item.quantity).toFixed(2)}
                       </span>
                       <Button
                         variant="ghost"

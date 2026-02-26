@@ -4,7 +4,7 @@ export interface Product {
   titolo: string;
   autore_artista: string;
   ISBN_ASIN: string;
-  prezzo: number;
+  prezzo: number | null;
   lingua: string;
   formato: string;
   descrizione: string;
