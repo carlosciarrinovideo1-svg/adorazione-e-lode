@@ -1,5 +1,5 @@
 // Supabase Edge Function: Scrape Metadata
-// Questo file verrà distribuito non appena il progetto sarà collegato a Supabase.
+// Questa funzione verrà distribuita automaticamente una volta selezionato il progetto Supabase.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
