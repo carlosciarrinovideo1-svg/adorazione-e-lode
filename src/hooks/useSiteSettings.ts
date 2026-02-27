@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SocialLink {
   name: string;
@@ -35,17 +36,11 @@ export interface BrandSettings {
   footerQuoteSource: string;
 }
 
-export interface FontSettings {
-  headingFont: string;
-  bodyFont: string;
-}
-
 export interface SiteSettings {
   brand: BrandSettings;
   contact: ContactInfo;
   social: SocialLink[];
   hero: HeroContent;
-  fonts: FontSettings;
 }
 
 const defaultSettings: SiteSettings = {
@@ -65,13 +60,12 @@ const defaultSettings: SiteSettings = {
     { name: "Facebook", url: "https://facebook.com", enabled: true },
     { name: "Instagram", url: "https://instagram.com", enabled: true },
     { name: "YouTube", url: "https://youtube.com", enabled: true },
-    { name: "X", url: "https://x.com", enabled: false },
   ],
   hero: {
     badge: "✝️ Nutri la tua fede con parole e melodie",
     title: "Libri e Musica per",
     titleHighlight: "Illuminare",
-    subtitle: "Scopri la nostra selezione curata di libri spirituali e musica cristiana. Ogni prodotto è scelto per ispirare, educare e accompagnare il tuo percorso di fede.",
+    subtitle: "Scopri la nostra selezione curata di libri spirituali e musica cristiana.",
     backgroundImage: "",
     stat1Value: "500+",
     stat1Label: "Titoli disponibili",
@@ -80,47 +74,61 @@ const defaultSettings: SiteSettings = {
     stat3Value: "4.9",
     stat3Label: "Valutazione media",
   },
-  fonts: {
-    headingFont: "Montserrat",
-    bodyFont: "Open Sans",
-  },
 };
 
 interface SiteSettingsState {
   settings: SiteSettings;
-  updateBrand: (brand: Partial<BrandSettings>) => void;
-  updateContact: (contact: Partial<ContactInfo>) => void;
-  updateSocial: (social: SocialLink[]) => void;
-  updateHero: (hero: Partial<HeroContent>) => void;
-  updateFonts: (fonts: Partial<FontSettings>) => void;
-  resetToDefaults: () => void;
+  isLoading: boolean;
+  fetchSettings: () => Promise<void>;
+  updateBrand: (brand: Partial<BrandSettings>) => Promise<void>;
+  updateContact: (contact: Partial<ContactInfo>) => Promise<void>;
+  updateSocial: (social: SocialLink[]) => Promise<void>;
+  updateHero: (hero: Partial<HeroContent>) => Promise<void>;
+  resetToDefaults: () => Promise<void>;
 }
 
 export const useSiteSettings = create<SiteSettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       settings: defaultSettings,
-      updateBrand: (brand) =>
-        set((state) => ({
-          settings: { ...state.settings, brand: { ...state.settings.brand, ...brand } },
-        })),
-      updateContact: (contact) =>
-        set((state) => ({
-          settings: { ...state.settings, contact: { ...state.settings.contact, ...contact } },
-        })),
-      updateSocial: (social) =>
-        set((state) => ({
-          settings: { ...state.settings, social },
-        })),
-      updateHero: (hero) =>
-        set((state) => ({
-          settings: { ...state.settings, hero: { ...state.settings.hero, ...hero } },
-        })),
-      updateFonts: (fonts) =>
-        set((state) => ({
-          settings: { ...state.settings, fonts: { ...state.settings.fonts, ...fonts } },
-        })),
-      resetToDefaults: () => set({ settings: defaultSettings }),
+      isLoading: false,
+      fetchSettings: async () => {
+        set({ isLoading: true });
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('settings')
+          .eq('id', 'main')
+          .single();
+        
+        if (data && !error) {
+          set({ settings: data.settings as SiteSettings });
+        }
+        set({ isLoading: false });
+      },
+      updateBrand: async (brand) => {
+        const newSettings = { ...get().settings, brand: { ...get().settings.brand, ...brand } };
+        set({ settings: newSettings });
+        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+      },
+      updateContact: async (contact) => {
+        const newSettings = { ...get().settings, contact: { ...get().settings.contact, ...contact } };
+        set({ settings: newSettings });
+        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+      },
+      updateSocial: async (social) => {
+        const newSettings = { ...get().settings, social };
+        set({ settings: newSettings });
+        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+      },
+      updateHero: async (hero) => {
+        const newSettings = { ...get().settings, hero: { ...get().settings.hero, ...hero } };
+        set({ settings: newSettings });
+        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+      },
+      resetToDefaults: async () => {
+        set({ settings: defaultSettings });
+        await supabase.from('site_settings').upsert({ id: 'main', settings: defaultSettings });
+      },
     }),
     {
       name: 'luce-divina-site-settings',
