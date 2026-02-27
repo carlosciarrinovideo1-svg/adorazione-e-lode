@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
-import { Loader2, Search, Music, BookOpen, Youtube, Globe, Image as ImageIcon } from "lucide-react";
+import { Loader2, Search, Music, BookOpen, Youtube, Globe, Image as ImageIcon, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FileUploader } from "../FileUploader";
 
 export interface ProductFormData {
   tipo: "libro" | "musica";
@@ -74,26 +75,47 @@ export function ProductEntryForm({
         <div className="space-y-2 md:col-span-2 bg-card p-4 rounded-lg border border-border/50">
           <Label className="flex items-center gap-2">
             {isMusic ? <Youtube className="h-4 w-4 text-red-600" /> : <Globe className="h-4 w-4 text-primary" />}
-            Link Sorgente (Amazon, YouTube, Spotify, ecc.) *
+            Link Sorgente o Carica Video *
           </Label>
-          <div className="flex gap-2">
-            <Input
-              value={form.url_originale}
-              onChange={(e) => setForm({ ...form, url_originale: e.target.value })}
-              placeholder={isMusic ? "Incolla link YouTube, Spotify, TikTok..." : "Incolla link Amazon o IBS..."}
-              className="flex-1"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onFetchMeta}
-              disabled={isFetching || !form.url_originale}
-            >
-              {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              <span className="ml-2 hidden sm:inline">
-                {isFetching ? "Recupero..." : "Recupera dati"}
-              </span>
-            </Button>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2">
+              <Input
+                value={form.url_originale}
+                onChange={(e) => setForm({ ...form, url_originale: e.target.value })}
+                placeholder={isMusic ? "Incolla link YouTube o carica file..." : "Incolla link Amazon o carica file..."}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onFetchMeta}
+                disabled={isFetching || !form.url_originale}
+              >
+                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                <span className="ml-2 hidden sm:inline">
+                  {isFetching ? "Recupero..." : "Recupera dati"}
+                </span>
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Oppure carica un video/file:</Label>
+                <FileUploader 
+                  label="Carica Video/File" 
+                  accept="video/*,application/pdf"
+                  onUploadComplete={(url) => setForm({ ...form, url_originale: url })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Carica Copertina/Foto:</Label>
+                <FileUploader 
+                  label="Carica Foto" 
+                  accept="image/*"
+                  onUploadComplete={(url) => setForm({ ...form, immagini: [url] })}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
