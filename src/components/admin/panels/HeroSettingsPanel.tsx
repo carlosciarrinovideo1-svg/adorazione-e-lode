@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
 import { Save, Image, ExternalLink } from "lucide-react";
+import { FileUploader } from "../FileUploader";
 
 export function HeroSettingsPanel() {
   const { settings, updateHero } = useSiteSettings();
@@ -72,29 +73,54 @@ export function HeroSettingsPanel() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="backgroundImage" className="flex items-center gap-2">
+        <div className="space-y-4 border-t pt-4">
+          <Label className="flex items-center gap-2">
             <Image className="h-4 w-4" />
-            Immagine di Sfondo (URL)
+            Immagine di Sfondo
           </Label>
-          <div className="flex gap-2">
-            <Input
-              id="backgroundImage"
-              value={formData.backgroundImage}
-              onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
-              placeholder="https://esempio.com/immagine.jpg (lascia vuoto per default)"
-            />
-            {formData.backgroundImage && (
-              <Button variant="outline" size="icon" asChild>
-                <a href={formData.backgroundImage} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
-            )}
+          
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Carica nuova immagine:</Label>
+              <FileUploader 
+                label="Carica Sfondo" 
+                accept="image/*"
+                folder="hero"
+                onUploadComplete={(url) => setFormData({ ...formData, backgroundImage: url })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Oppure inserisci URL:</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="backgroundImage"
+                  value={formData.backgroundImage}
+                  onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
+                  placeholder="https://esempio.com/immagine.jpg"
+                />
+                {formData.backgroundImage && (
+                  <Button variant="outline" size="icon" asChild>
+                    <a href={formData.backgroundImage} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Inserisci l'URL di un'immagine. Puoi usare servizi come Imgur, Google Drive (link pubblico), o qualsiasi URL immagine.
-          </p>
+          
+          {formData.backgroundImage && (
+            <div className="mt-2">
+              <p className="text-xs font-medium mb-2 text-muted-foreground">Anteprima Sfondo:</p>
+              <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">
+                <img 
+                  src={formData.backgroundImage} 
+                  alt="Anteprima" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Statistics */}
