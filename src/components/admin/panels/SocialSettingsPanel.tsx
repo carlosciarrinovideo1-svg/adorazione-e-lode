@@ -6,13 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useSiteSettings, SocialLink } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
-import { Save, Facebook, Instagram, Youtube, Twitter, Plus, Trash2 } from "lucide-react";
+import { 
+  Save, 
+  Facebook, 
+  Instagram, 
+  Youtube, 
+  Twitter, 
+  Plus, 
+  Trash2, 
+  Linkedin, 
+  Send, 
+  MessageCircle, 
+  Globe 
+} from "lucide-react";
 
 const socialIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   Facebook,
   Instagram,
   YouTube: Youtube,
   X: Twitter,
+  Twitter,
+  TikTok: Globe,
+  LinkedIn: Linkedin,
+  Telegram: Send,
+  WhatsApp: MessageCircle,
 };
 
 export function SocialSettingsPanel() {
@@ -52,16 +69,16 @@ export function SocialSettingsPanel() {
       </CardHeader>
       <CardContent className="space-y-6">
         {formData.map((social, index) => {
-          const IconComponent = socialIcons[social.name];
+          const IconComponent = socialIcons[social.name] || Globe;
           return (
             <div key={index} className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
               <div className="flex-shrink-0 mt-2">
-                {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+                <IconComponent className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="flex-1 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor={`name-${index}`}>Nome</Label>
+                    <Label htmlFor={`name-${index}`}>Nome (es. Facebook, TikTok, WhatsApp)</Label>
                     <Input
                       id={`name-${index}`}
                       value={social.name}

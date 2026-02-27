@@ -1,5 +1,21 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Music, Heart, Mail, Phone, MapPin, Facebook, Instagram, Youtube, Twitter } from "lucide-react";
+import { 
+  BookOpen, 
+  Music, 
+  Heart, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Facebook, 
+  Instagram, 
+  Youtube, 
+  Twitter, 
+  Linkedin, 
+  Send, 
+  MessageCircle, 
+  Globe,
+  Share2
+} from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const socialIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -7,6 +23,11 @@ const socialIcons: Record<string, React.ComponentType<{ className?: string }>> =
   Instagram,
   YouTube: Youtube,
   X: Twitter,
+  Twitter,
+  TikTok: Music,
+  LinkedIn: Linkedin,
+  Telegram: Send,
+  WhatsApp: MessageCircle,
 };
 
 export function Footer() {
@@ -44,8 +65,9 @@ export function Footer() {
               {settings.social
                 .filter((s) => s.enabled && s.url)
                 .map((social) => {
-                  const IconComponent = socialIcons[social.name];
-                  return IconComponent ? (
+                  // Cerca l'icona corrispondente o usa Globe come fallback
+                  const IconComponent = socialIcons[social.name] || Globe;
+                  return (
                     <a
                       key={social.name}
                       href={social.url}
@@ -56,7 +78,7 @@ export function Footer() {
                     >
                       <IconComponent className="h-4 w-4" />
                     </a>
-                  ) : null;
+                  );
                 })}
             </div>
           </div>
