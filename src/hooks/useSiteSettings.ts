@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface SocialLink {
   name: string;
@@ -94,40 +95,58 @@ export const useSiteSettings = create<SiteSettingsState>()(
       isLoading: false,
       fetchSettings: async () => {
         set({ isLoading: true });
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('settings')
-          .eq('id', 'main')
-          .single();
-        
-        if (data && !error) {
-          set({ settings: data.settings as SiteSettings });
+        try {
+          const { data, error } = await supabase
+            .from('site_settings')
+            .select('settings')
+            .eq('id', 'main')
+            .maybeSingle();
+          
+          if (data && !error) {
+            // Uniamo i dati dal DB con i default per evitare chiavi mancanti
+            const mergedSettings = {
+              ...defaultSettings,
+              ...(data.settings as SiteSettings),
+              brand: { ...defaultSettings.brand, ...(data.settings as any).brand },
+              contact: { ...defaultSettings.contact, ...(data.settings as any).contact },
+              hero: { ...defaultSettings.hero, ...(data.settings as any).hero },
+            };
+            set({ settings: mergedSettings });
+          }
+        } catch (err) {
+          console.error("Errore caricamento impostazioni:", err);
+        } finally {
+          set({ isLoading: false });
         }
-        set({ isLoading: false });
       },
       updateBrand: async (brand) => {
         const newSettings = { ...get().settings, brand: { ...get().settings.brand, ...brand } };
         set({ settings: newSettings });
-        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        const { error } = await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        if (error) toast.error("Errore salvataggio database: " + error.message);
       },
       updateContact: async (contact) => {
         const newSettings = { ...get().settings, contact: { ...get().settings.contact, ...contact } };
         set({ settings: newSettings });
-        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        const { error } = await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        if (error) toast.error("Errore salvataggio database: " + error.message);
       },
       updateSocial: async (social) => {
         const newSettings = { ...get().settings, social };
         set({ settings: newSettings });
-        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        const { error } = await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        if (error) toast.error("Errore salvataggio database: " + error.message);
       },
       updateHero: async (hero) => {
         const newSettings = { ...get().settings, hero: { ...get().settings.hero, ...hero } };
         set({ settings: newSettings });
-        await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        const { error } = await supabase.from('site_settings').upsert({ id: 'main', settings: newSettings });
+        if (error) toast.error("Errore salvataggio database: " + error.message);
       },
       resetToDefaults: async () => {
         set({ settings: defaultSettings });
-        await supabase.from('site_settings').upsert({ id: 'main', settings: defaultSettings });
+        const { error } = await supabase.from('site_settings').upsert({ id: 'main', settings: defaultSettings });
+        if (error) toast.error("Errore reset database: " + error.message);
       },
     }),
     {
